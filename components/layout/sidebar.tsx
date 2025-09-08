@@ -3,11 +3,12 @@
 import { Button } from '@/components/ui/button'
 import { signOut, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
-import { LogOut, Menu, Settings, Target, Users } from 'lucide-react'
+import { Home, LogOut, Menu, Settings, Target, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navigation = [
+  { name: 'Home', href: '/', icon: Home },
   { name: 'Leads', href: '/leads', icon: Users },
   { name: 'Campaigns', href: '/campaigns', icon: Target },
   { name: 'Settings', href: '/settings', icon: Settings },

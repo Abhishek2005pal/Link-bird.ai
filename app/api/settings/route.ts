@@ -1,21 +1,56 @@
-import { getSession } from '@/lib/auth-client'
+import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
+import { users, sessions } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 
-export async function GET() {
+// Helper to get the current user ID from session cookie
+async function getCurrentUserId(request: NextRequest): Promise<string | null> {
   try {
-    const sessionResult = await getSession()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = (sessionResult as unknown) as any
+    // Look for the session cookie with various possible names
+    let sessionCookie = request.cookies.get('auth_session')?.value
     
-    if (!session?.user?.id && !session?.data?.user?.id) {
+    if (!sessionCookie) {
+      sessionCookie = request.cookies.get('better_auth_session')?.value
+    }
+    
+    if (!sessionCookie) {
+      // Log all available cookies for debugging
+      console.log("Available cookies:", [...request.cookies.getAll()].map(c => c.name))
+      console.log("No session cookie found")
+      return null
+    }
+    
+    console.log("Found session cookie:", sessionCookie.substring(0, 10) + '...')
+    
+    // Find session in database
+    const session = await db.select({
+      userId: sessions.userId
+    })
+    .from(sessions)
+    .where(eq(sessions.token, sessionCookie))
+    .limit(1)
+    
+    if (!session.length) {
+      console.log("No valid session found")
+      return null
+    }
+    
+    return session[0].userId
+  } catch (error) {
+    console.error("Error getting current user:", error)
+    return null
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const userId = await getCurrentUserId(request)
+    
+    if (!userId) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    // Handle both possible structures
-    const userId = session?.user?.id || session?.data?.user?.id
 
     const user = await db.query.users.findFirst({
       where: eq(users.id, userId),
@@ -39,16 +74,11 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const sessionResult = await getSession()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = (sessionResult as unknown) as any
+    const userId = await getCurrentUserId(request)
     
-    if (!session?.user?.id && !session?.data?.user?.id) {
+    if (!userId) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    // Handle both possible structures
-    const userId = session?.user?.id || session?.data?.user?.id
 
     const data = await request.json()
     

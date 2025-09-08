@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { signOut, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
-import { LogOut, Menu, Settings, User } from 'lucide-react'
+import { ArrowLeft, LogOut, Settings, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export function DashboardHeader() {
@@ -23,19 +23,28 @@ export function DashboardHeader() {
     setSidebarCollapsed(!sidebarCollapsed)
   }
 
+  const goToHome = () => {
+    router.push('/')
+  }
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        {/* Left side - Menu toggle and Logo */}
+        {/* Left side - Menu toggle, Back button and Logo */}
         <div className="flex items-center">
+          
+          
+          
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggleSidebar}
-            className="mr-3 p-2"
+            onClick={goToHome}
+            className="mr-3 p-2 hover:bg-gray-100"
+            title="Back to Home"
           >
-            <Menu className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          
           <div className="flex items-center">
             <h1 className="text-xl font-bold text-indigo-600">Linkbird.ai</h1>
           </div>
@@ -63,6 +72,10 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={goToHome}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                <span>Back to Home</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
